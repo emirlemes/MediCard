@@ -1,6 +1,6 @@
 import {useState} from 'react'
 import {Heading} from '../components/Heading'
-import {Plus} from 'lucide-react'
+import {Plus, Search} from 'lucide-react'
 
 export function NewExamination({
   patients,
@@ -36,6 +36,19 @@ export function NewExamination({
     }[]
   >([])
   const [error, setError] = useState('')
+  const [patientSearch, setPatientSearch] = useState('')
+  const [patientDropdownOpen, setPatientDropdownOpen] = useState(false)
+  const selectedPatient = patients.find((patient) => patient.id === form.patientId)
+  const selectedPatientLabel = selectedPatient
+    ? `${selectedPatient.firstName} ${selectedPatient.lastName} - ${selectedPatient.recordNumber}`
+    : ''
+  const visiblePatients = patients
+    .filter((patient) =>
+      `${patient.firstName} ${patient.lastName} ${patient.recordNumber}`
+        .toLowerCase()
+        .includes(patientSearch.toLowerCase())
+    )
+    .slice(0, 10)
   function updateTherapy(index: number, field: keyof (typeof therapyItems)[number], value: string) {
     setTherapyItems(therapyItems.map((item, itemIndex) => (itemIndex === index ? {...item, [field]: value} : item)))
   }
@@ -63,14 +76,53 @@ export function NewExamination({
         <div className="examination-grid">
           <label>
             Pacijent
-            <select value={form.patientId} onChange={(event) => setForm({...form, patientId: event.target.value})}>
-              <option value="">Odaberite pacijenta</option>
-              {patients.map((patient) => (
-                <option key={patient.id} value={patient.id}>
-                  {patient.firstName} {patient.lastName} - {patient.recordNumber}
-                </option>
-              ))}
-            </select>
+            <div className="patient-dropdown">
+              <div className="search-box examination-patient-search">
+                <Search size={17} />
+                <input
+                  value={patientSearch || selectedPatientLabel}
+                  onFocus={() => setPatientDropdownOpen(true)}
+                  onChange={(event) => {
+                    setPatientSearch(event.target.value)
+                    setForm({...form, patientId: ''})
+                    setPatientDropdownOpen(true)
+                  }}
+                  placeholder="Pretraži ime ili broj kartona..."
+                  aria-label="Pretraži pacijente"
+                  role="combobox"
+                  aria-expanded={patientDropdownOpen}
+                  aria-controls="patient-search-results"
+                />
+              </div>
+              {patientDropdownOpen && (
+                <div className="patient-dropdown-menu" id="patient-search-results" role="listbox">
+                  {visiblePatients.length > 0 ? (
+                    visiblePatients.map((patient) => (
+                      <button
+                        className="patient-dropdown-option"
+                        key={patient.id}
+                        type="button"
+                        role="option"
+                        aria-selected={patient.id === form.patientId}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => {
+                          setForm({...form, patientId: patient.id})
+                          setPatientSearch('')
+                          setPatientDropdownOpen(false)
+                        }}
+                      >
+                        <strong>
+                          {patient.firstName} {patient.lastName}
+                        </strong>
+                        <span>Karton {patient.recordNumber}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="patient-dropdown-empty">Nema pronađenih pacijenata.</p>
+                  )}
+                </div>
+              )}
+            </div>
           </label>
           <label>
             Odjel

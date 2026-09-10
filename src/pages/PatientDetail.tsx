@@ -1,26 +1,46 @@
-import { useEffect, useState } from "react";
-import { ArrowUpRight, ClipboardList, Plus, Trash2, Users } from "lucide-react";
-import { Heading } from "../components/Heading";
-import { formatDate, initials } from "../utils/formatters";
+import {useEffect, useState} from 'react'
+import {ArrowUpRight, ClipboardList, Plus, Trash2, Users} from 'lucide-react'
+import {Heading} from '../components/Heading'
+import {formatDate, initials} from '../utils/formatters'
 
 export function PatientDetailPage({
   patientId,
-  settings,
   onBack,
   onNewExamination,
+  onPatientUpdated
 }: {
-  patientId: string;
-  settings: ClinicSettingsRecord | null;
-  onBack: () => void;
-  onNewExamination: () => void;
+  patientId: string
+  onBack: () => void
+  onNewExamination: () => void
+  onPatientUpdated: (patient: PatientRecord) => void
 }) {
-  const [patient, setPatient] = useState<PatientDetail | null>(null);
-  const [selectedExamination, setSelectedExamination] =
-    useState<ExaminationRecord | null>(null);
-  const [editing, setEditing] = useState(false);
+  const [patient, setPatient] = useState<PatientDetail | null>(null)
+  const [loadingError, setLoadingError] = useState<{patientId: string; message: string} | null>(null)
+  const [selectedExamination, setSelectedExamination] = useState<ExaminationRecord | null>(null)
+  const [editing, setEditing] = useState(false)
   useEffect(() => {
-    void window.clinic.patients.get(patientId).then(setPatient);
-  }, [patientId]);
+    void window.clinic.patients
+      .get(patientId)
+      .then((loadedPatient) => {
+        if (!loadedPatient) {
+          setLoadingError({patientId, message: 'Pacijent nije pronađen.'})
+          return
+        }
+        setPatient(loadedPatient)
+      })
+        .catch(() => setLoadingError({patientId, message: 'Karton nije moguće učitati.'}))
+  }, [patientId])
+      if (loadingError?.patientId === patientId)
+    return (
+      <section className="panel empty-form">
+        <Users size={30} />
+        <h2>Greška pri učitavanju</h2>
+        <p>{loadingError.message}</p>
+        <button className="secondary-button" type="button" onClick={onBack}>
+          Nazad na pacijente
+        </button>
+      </section>
+    )
   if (!patient)
     return (
       <section className="panel empty-form">
@@ -28,15 +48,15 @@ export function PatientDetailPage({
         <h2>Učitavanje kartona</h2>
         <p>Pripremamo podatke pacijenta.</p>
       </section>
-    );
+    )
   async function exportExaminations() {
-    if (!patient) return;
+    if (!patient) return
     const result = await window.clinic.examinations.exportCsv({
       patientName: `${patient.firstName} ${patient.lastName}`,
       recordNumber: patient.recordNumber,
-      examinations: patient.examinations,
-    });
-    if (result.saved) setSelectedExamination(null);
+      examinations: patient.examinations
+    })
+    if (result.saved) setSelectedExamination(null)
   }
   return (
     <>
@@ -48,39 +68,31 @@ export function PatientDetailPage({
         title={`${patient.firstName} ${patient.lastName}`}
         subtitle={`Karton ${patient.recordNumber}`}
         action={
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() => setEditing(true)}
-          >
+          <button className="secondary-button" type="button" onClick={() => setEditing(true)}>
             Uredi podatke
           </button>
         }
       />
       <section className="patient-summary panel">
-        <div className="large-patient-avatar">
-          {initials(`${patient.firstName} ${patient.lastName}`)}
-        </div>
+        <div className="large-patient-avatar">{initials(`${patient.firstName} ${patient.lastName}`)}</div>
         <div>
           <h2>Osnovni podaci</h2>
           <div className="patient-facts">
             <span>
               <strong>Datum rođenja</strong>
-              {patient.dateOfBirth
-                ? formatDate(patient.dateOfBirth)
-                : "Nije uneseno"}
+              {patient.dateOfBirth ? formatDate(patient.dateOfBirth) : 'Nije uneseno'}
             </span>
             <span>
               <strong>JMBG</strong>
-              {patient.nationalId || "Nije uneseno"}
+              {patient.nationalId || 'Nije uneseno'}
             </span>
             <span>
               <strong>Telefon</strong>
-              {patient.phone || "Nije uneseno"}
+              {patient.phone || 'Nije uneseno'}
             </span>
             <span>
               <strong>Adresa</strong>
-              {patient.address || "Nije uneseno"}
+              {patient.address || 'Nije uneseno'}
             </span>
           </div>
         </div>
@@ -92,11 +104,7 @@ export function PatientDetailPage({
             <h2>Historija pregleda</h2>
           </div>
           <div className="heading-actions">
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => void exportExaminations()}
-            >
+            <button className="secondary-button" type="button" onClick={() => void exportExaminations()}>
               Izvoz pregleda
             </button>
             <button
@@ -105,15 +113,13 @@ export function PatientDetailPage({
               disabled={Boolean(patient.lockedAt)}
               onClick={onNewExamination}
             >
-              <Plus size={17} />{" "}
-              {patient.lockedAt ? "Karton zaključan" : "Novi pregled"}
+              <Plus size={17} /> {patient.lockedAt ? 'Karton zaključan' : 'Novi pregled'}
             </button>
           </div>
         </div>
         {patient.lockedAt && (
           <div className="locked-notice">
-            Karton je zaključan nakon štampanja nalaza. Podaci i nalazi se više
-            ne mogu mijenjati.
+            Karton je zaključan nakon štampanja nalaza. Podaci i nalazi se više ne mogu mijenjati.
           </div>
         )}
         {patient.examinations.length === 0 ? (
@@ -128,14 +134,22 @@ export function PatientDetailPage({
               <article
                 className="history-item"
                 key={examination.id}
-                onDoubleClick={() => setSelectedExamination(examination)}
+                tabIndex={0}
+                role="button"
+                onClick={() => setSelectedExamination(examination)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setSelectedExamination(examination)
+                  }
+                }}
               >
                 <div className="history-date">
                   <strong>{formatDate(examination.examinationAt)}</strong>
                   <span>{examination.department.name}</span>
                 </div>
                 <div className="history-content">
-                  <h3>{examination.diagnosis || "Pregled bez dijagnoze"}</h3>
+                  <h3>{examination.diagnosis || 'Pregled bez dijagnoze'}</h3>
                   <p>Doktor: {examination.doctorName}</p>
                   {examination.findings && (
                     <div>
@@ -143,23 +157,21 @@ export function PatientDetailPage({
                       <p>{examination.findings}</p>
                     </div>
                   )}
-                  {examination.therapy &&
-                    examination.therapy.items.length > 0 && (
-                      <div>
-                        <strong>Terapija</strong>
-                        <p>
-                          {examination.therapy.items
-                            .map((item) => item.medicineName)
-                            .join(", ")}
-                        </p>
-                      </div>
-                    )}
+                  {examination.therapy && examination.therapy.items.length > 0 && (
+                    <div>
+                      <strong>Terapija</strong>
+                      <p>{examination.therapy.items.map((item) => item.medicineName).join(', ')}</p>
+                    </div>
+                  )}
                 </div>
                 <button
                   className="icon-button"
                   type="button"
                   aria-label="Otvori nalaz"
-                  onClick={() => setSelectedExamination(examination)}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    setSelectedExamination(examination)
+                  }}
                 >
                   <ArrowUpRight size={16} />
                 </button>
@@ -170,19 +182,15 @@ export function PatientDetailPage({
       </section>
       {selectedExamination && (
         <ExaminationDialog
-          patient={patient}
           examination={selectedExamination}
-          settings={settings}
           locked={Boolean(patient.lockedAt)}
-          onLocked={(lockedAt) => setPatient({ ...patient, lockedAt })}
+          onLocked={(lockedAt) => setPatient({...patient, lockedAt})}
           onUpdated={(updated) => {
             setPatient({
               ...patient,
-              examinations: patient.examinations.map((item) =>
-                item.id === updated.id ? updated : item,
-              ),
-            });
-            setSelectedExamination(updated);
+              examinations: patient.examinations.map((item) => (item.id === updated.id ? updated : item))
+            })
+            setSelectedExamination(updated)
           }}
           onClose={() => setSelectedExamination(null)}
         />
@@ -192,56 +200,51 @@ export function PatientDetailPage({
           patient={patient}
           onClose={() => setEditing(false)}
           onSaved={(updated) => {
-            setPatient({ ...patient, ...updated });
-            setEditing(false);
+            setPatient({...patient, ...updated})
+            onPatientUpdated(updated)
+            setEditing(false)
           }}
         />
       )}
     </>
-  );
+  )
 }
 
 function PatientEditor({
   patient,
   onClose,
-  onSaved,
+  onSaved
 }: {
-  patient: PatientDetail;
-  onClose: () => void;
-  onSaved: (patient: PatientRecord) => void;
+  patient: PatientDetail
+  onClose: () => void
+  onSaved: (patient: PatientRecord) => void
 }) {
-  const locked = Boolean(patient.lockedAt);
+  const locked = Boolean(patient.lockedAt)
   const [form, setForm] = useState({
     firstName: patient.firstName,
     lastName: patient.lastName,
     recordNumber: patient.recordNumber,
-    dateOfBirth: patient.dateOfBirth?.slice(0, 10) ?? "",
-    nationalId: patient.nationalId ?? "",
-    address: patient.address ?? "",
-    phone: patient.phone ?? "",
-    note: patient.note ?? "",
-  });
-  const [error, setError] = useState("");
+    dateOfBirth: patient.dateOfBirth?.slice(0, 10) ?? '',
+    nationalId: patient.nationalId ?? '',
+    address: patient.address ?? '',
+    phone: patient.phone ?? '',
+    note: patient.note ?? ''
+  })
+  const [error, setError] = useState('')
   async function save() {
-    setError("");
+    setError('')
     if (locked) {
-      setError("Karton je zaključan nakon štampanja nalaza.");
-      return;
+      setError('Karton je zaključan nakon štampanja nalaza.')
+      return
     }
-    if (
-      !form.firstName.trim() ||
-      !form.lastName.trim() ||
-      !form.recordNumber.trim()
-    ) {
-      setError("Ime, prezime i broj kartona su obavezni.");
-      return;
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.recordNumber.trim()) {
+      setError('Ime, prezime i broj kartona su obavezni.')
+      return
     }
     try {
-      onSaved(await window.clinic.patients.update({ id: patient.id, ...form }));
+      onSaved(await window.clinic.patients.update({id: patient.id, ...form}))
     } catch {
-      setError(
-        "Pacijent nije sačuvan. Provjerite da broj kartona nije duplikat.",
-      );
+      setError('Pacijent nije sačuvan. Provjerite da broj kartona nije duplikat.')
     }
   }
   return (
@@ -250,31 +253,20 @@ function PatientEditor({
         <div className="dialog-heading">
           <div>
             <p className="eyebrow">KARTON PACIJENTA</p>
-            <h2>{locked ? "Karton je zaključan" : "Uredi podatke"}</h2>
+            <h2>{locked ? 'Karton je zaključan' : 'Uredi podatke'}</h2>
           </div>
-          <button
-            className="icon-button"
-            type="button"
-            aria-label="Zatvori uređivanje"
-            onClick={onClose}
-          >
+          <button className="icon-button" type="button" aria-label="Zatvori uređivanje" onClick={onClose}>
             ×
           </button>
         </div>
-        <p>
-          {locked
-            ? "Podaci se ne mogu mijenjati nakon štampanja nalaza."
-            : "Izmjene se čuvaju u lokalnoj bazi."}
-        </p>
+        <p>{locked ? 'Podaci se ne mogu mijenjati nakon štampanja nalaza.' : 'Izmjene se čuvaju u lokalnoj bazi.'}</p>
         <div className="form-grid">
           <label>
             Ime
             <input
               disabled={locked}
               value={form.firstName}
-              onChange={(event) =>
-                setForm({ ...form, firstName: event.target.value })
-              }
+              onChange={(event) => setForm({...form, firstName: event.target.value})}
             />
           </label>
           <label>
@@ -282,9 +274,7 @@ function PatientEditor({
             <input
               disabled={locked}
               value={form.lastName}
-              onChange={(event) =>
-                setForm({ ...form, lastName: event.target.value })
-              }
+              onChange={(event) => setForm({...form, lastName: event.target.value})}
             />
           </label>
           <label>
@@ -292,9 +282,7 @@ function PatientEditor({
             <input
               disabled={locked}
               value={form.recordNumber}
-              onChange={(event) =>
-                setForm({ ...form, recordNumber: event.target.value })
-              }
+              onChange={(event) => setForm({...form, recordNumber: event.target.value})}
             />
           </label>
           <label>
@@ -303,9 +291,7 @@ function PatientEditor({
               disabled={locked}
               type="date"
               value={form.dateOfBirth}
-              onChange={(event) =>
-                setForm({ ...form, dateOfBirth: event.target.value })
-              }
+              onChange={(event) => setForm({...form, dateOfBirth: event.target.value})}
             />
           </label>
           <label>
@@ -313,9 +299,7 @@ function PatientEditor({
             <input
               disabled={locked}
               value={form.nationalId}
-              onChange={(event) =>
-                setForm({ ...form, nationalId: event.target.value })
-              }
+              onChange={(event) => setForm({...form, nationalId: event.target.value})}
             />
           </label>
           <label>
@@ -323,9 +307,7 @@ function PatientEditor({
             <input
               disabled={locked}
               value={form.phone}
-              onChange={(event) =>
-                setForm({ ...form, phone: event.target.value })
-              }
+              onChange={(event) => setForm({...form, phone: event.target.value})}
             />
           </label>
           <label className="full-width">
@@ -333,9 +315,7 @@ function PatientEditor({
             <input
               disabled={locked}
               value={form.address}
-              onChange={(event) =>
-                setForm({ ...form, address: event.target.value })
-              }
+              onChange={(event) => setForm({...form, address: event.target.value})}
             />
           </label>
           <label className="full-width">
@@ -344,9 +324,7 @@ function PatientEditor({
               disabled={locked}
               rows={3}
               value={form.note}
-              onChange={(event) =>
-                setForm({ ...form, note: event.target.value })
-              }
+              onChange={(event) => setForm({...form, note: event.target.value})}
             />
           </label>
         </div>
@@ -356,86 +334,77 @@ function PatientEditor({
             Odustani
           </button>
           {!locked && (
-            <button
-              className="primary-button"
-              type="button"
-              onClick={() => void save()}
-            >
+            <button className="primary-button" type="button" onClick={() => void save()}>
               Sačuvaj izmjene
             </button>
           )}
         </div>
       </section>
     </div>
-  );
+  )
 }
 
 function ExaminationDialog({
-  patient,
   examination,
-  settings,
   locked,
   onLocked,
   onUpdated,
-  onClose,
+  onClose
 }: {
-  patient: PatientDetail;
-  examination: ExaminationRecord;
-  settings: ClinicSettingsRecord | null;
-  locked: boolean;
-  onLocked: (lockedAt: string) => void;
-  onUpdated: (examination: ExaminationRecord) => void;
-  onClose: () => void;
+  examination: ExaminationRecord
+  locked: boolean
+  onLocked: (lockedAt: string) => void
+  onUpdated: (examination: ExaminationRecord) => void
+  onClose: () => void
 }) {
-  const [message, setMessage] = useState("");
-  const [editing, setEditing] = useState(false);
+  const [message, setMessage] = useState('')
+  const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({
-    diagnosis: examination.diagnosis ?? "",
-    findings: examination.findings ?? "",
-    recommendation: examination.recommendation ?? "",
-  });
+    diagnosis: examination.diagnosis ?? '',
+    findings: examination.findings ?? '',
+    recommendation: examination.recommendation ?? ''
+  })
   const [therapyItems, setTherapyItems] = useState(
     () =>
       examination.therapy?.items.map((item) => ({
         id: item.id,
         medicineName: item.medicineName,
-        dosage: item.dosage ?? "",
-        administrationRoute: item.administrationRoute ?? "",
-        duration: item.duration ?? "",
-        note: item.note ?? "",
-      })) ?? [],
-  );
+        dosage: item.dosage ?? '',
+        administrationRoute: item.administrationRoute ?? '',
+        duration: item.duration ?? '',
+        note: item.note ?? ''
+      })) ?? []
+  )
   async function savePdf() {
     try {
-      const result = await window.clinic.reports.pdf({
-        patient,
-        examination,
-        settings,
-      });
-      if (result.saved) setMessage("PDF je sačuvan.");
+      const result = await window.clinic.reports.pdf(examination.id);
+      if (result.saved) setMessage('PDF je sačuvan.')
     } catch {
-      setMessage("PDF nije moguće sačuvati.");
+      setMessage('PDF nije moguće sačuvati.')
+    }
+  }
+  async function previewReport() {
+    try {
+      await window.clinic.reports.preview(examination.id);
+    } catch {
+      setMessage('Pregled nalaza nije moguće otvoriti.')
     }
   }
   async function printReport() {
     try {
-      const result = await window.clinic.reports.print({
-        patient,
-        examination,
-        settings,
-      });
+      const result = await window.clinic.reports.print(examination.id);
       if (result.printed && result.lockedAt) {
-        onLocked(result.lockedAt);
-        setMessage("Nalaz je poslan na štampu. Karton je zaključan.");
+        onLocked(result.lockedAt)
+        setMessage('Nalaz je poslan na štampu. Karton je zaključan.')
       }
     } catch {
-      setMessage("Štampanje nije uspjelo.");
+      setMessage('Štampanje nije uspjelo.')
     }
   }
   async function saveEdit() {
     if (therapyItems.some((item) => !item.medicineName.trim())) {
-      setMessage("Svaki lijek mora imati naziv.");
-      return;
+      setMessage('Svaki lijek mora imati naziv.')
+      return
     }
     try {
       const updated = await window.clinic.examinations.update({
@@ -443,25 +412,20 @@ function ExaminationDialog({
         diagnosis: form.diagnosis,
         findings: form.findings,
         recommendation: form.recommendation,
-        therapyItems,
-      });
-      onUpdated(updated);
-      setEditing(false);
-      setMessage("Nalaz je izmijenjen.");
+        therapyItems
+      })
+      onUpdated(updated)
+      setEditing(false)
+      setMessage('Nalaz je izmijenjen.')
     } catch {
-      setMessage("Nalaz nije moguće izmijeniti. Karton je možda zaključan.");
+      setMessage('Nalaz nije moguće izmijeniti. Karton je možda zaključan.')
     }
   }
   const updateTherapy = (
     id: string,
-    field: "medicineName" | "dosage" | "duration",
-    value: string,
-  ) =>
-    setTherapyItems(
-      therapyItems.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
-      ),
-    );
+    field: 'medicineName' | 'dosage' | 'administrationRoute' | 'duration' | 'note',
+    value: string
+  ) => setTherapyItems(therapyItems.map((item) => (item.id === id ? {...item, [field]: value} : item)))
   return (
     <div className="modal-backdrop">
       <section className="modal panel examination-dialog">
@@ -469,16 +433,10 @@ function ExaminationDialog({
           <div>
             <p className="eyebrow">NALAZ</p>
             <h2>
-              {formatDate(examination.examinationAt)} ·{" "}
-              {examination.department.name}
+              {formatDate(examination.examinationAt)} · {examination.department.name}
             </h2>
           </div>
-          <button
-            className="icon-button"
-            type="button"
-            aria-label="Zatvori nalaz"
-            onClick={onClose}
-          >
+          <button className="icon-button" type="button" aria-label="Zatvori nalaz" onClick={onClose}>
             ×
           </button>
         </div>
@@ -487,21 +445,14 @@ function ExaminationDialog({
           <div className="examination-fields dialog-edit-fields">
             <label>
               Dijagnoza
-              <input
-                value={form.diagnosis}
-                onChange={(event) =>
-                  setForm({ ...form, diagnosis: event.target.value })
-                }
-              />
+              <input value={form.diagnosis} onChange={(event) => setForm({...form, diagnosis: event.target.value})} />
             </label>
             <label>
               Nalaz
               <textarea
                 rows={6}
                 value={form.findings}
-                onChange={(event) =>
-                  setForm({ ...form, findings: event.target.value })
-                }
+                onChange={(event) => setForm({...form, findings: event.target.value})}
               />
             </label>
             <label>
@@ -509,9 +460,7 @@ function ExaminationDialog({
               <textarea
                 rows={4}
                 value={form.recommendation}
-                onChange={(event) =>
-                  setForm({ ...form, recommendation: event.target.value })
-                }
+                onChange={(event) => setForm({...form, recommendation: event.target.value})}
               />
             </label>
             <div className="dialog-therapy-editor">
@@ -528,21 +477,19 @@ function ExaminationDialog({
                       ...therapyItems,
                       {
                         id: crypto.randomUUID(),
-                        medicineName: "",
-                        dosage: "",
-                        administrationRoute: "",
-                        duration: "",
-                        note: "",
-                      },
+                        medicineName: '',
+                        dosage: '',
+                        administrationRoute: '',
+                        duration: '',
+                        note: ''
+                      }
                     ])
                   }
                 >
                   Dodaj lijek
                 </button>
               </div>
-              {therapyItems.length === 0 && (
-                <p className="therapy-empty">Nema dodanih lijekova.</p>
-              )}
+              {therapyItems.length === 0 && <p className="therapy-empty">Nema dodanih lijekova.</p>}
               {therapyItems.map((item, index) => (
                 <div className="dialog-therapy-row" key={item.id}>
                   <span className="therapy-number">{index + 1}</span>
@@ -551,42 +498,38 @@ function ExaminationDialog({
                       aria-label="Naziv lijeka"
                       placeholder="Naziv lijeka"
                       value={item.medicineName}
-                      onChange={(event) =>
-                        updateTherapy(
-                          item.id,
-                          "medicineName",
-                          event.target.value,
-                        )
-                      }
+                      onChange={(event) => updateTherapy(item.id, 'medicineName', event.target.value)}
                     />
                     <input
                       aria-label="Doziranje"
                       placeholder="Doziranje"
                       value={item.dosage}
-                      onChange={(event) =>
-                        updateTherapy(item.id, "dosage", event.target.value)
-                      }
+                      onChange={(event) => updateTherapy(item.id, 'dosage', event.target.value)}
+                    />
+                    <input
+                      aria-label="Način primjene"
+                      placeholder="Način primjene"
+                      value={item.administrationRoute}
+                      onChange={(event) => updateTherapy(item.id, 'administrationRoute', event.target.value)}
                     />
                     <input
                       aria-label="Trajanje"
                       placeholder="Trajanje"
                       value={item.duration}
-                      onChange={(event) =>
-                        updateTherapy(item.id, "duration", event.target.value)
-                      }
+                      onChange={(event) => updateTherapy(item.id, 'duration', event.target.value)}
+                    />
+                    <input
+                      aria-label="Napomena terapije"
+                      placeholder="Napomena"
+                      value={item.note}
+                      onChange={(event) => updateTherapy(item.id, 'note', event.target.value)}
                     />
                   </div>
                   <button
                     className="icon-button"
                     type="button"
                     aria-label="Ukloni lijek"
-                    onClick={() =>
-                      setTherapyItems(
-                        therapyItems.filter(
-                          (current) => current.id !== item.id,
-                        ),
-                      )
-                    }
+                    onClick={() => setTherapyItems(therapyItems.filter((current) => current.id !== item.id))}
                   >
                     <Trash2 size={18} />
                   </button>
@@ -598,15 +541,15 @@ function ExaminationDialog({
           <>
             <div className="dialog-section">
               <strong>Dijagnoza</strong>
-              <p>{examination.diagnosis || "Nije unesena"}</p>
+              <p>{examination.diagnosis || 'Nije unesena'}</p>
             </div>
             <div className="dialog-section">
               <strong>Nalaz</strong>
-              <p>{examination.findings || "Nije unesen"}</p>
+              <p>{examination.findings || 'Nije unesen'}</p>
             </div>
             <div className="dialog-section">
               <strong>Preporuka</strong>
-              <p>{examination.recommendation || "Nije unesena"}</p>
+              <p>{examination.recommendation || 'Nije unesena'}</p>
             </div>
           </>
         )}
@@ -615,52 +558,36 @@ function ExaminationDialog({
             <strong>Terapija</strong>
             {examination.therapy.items.map((item) => (
               <p key={item.id}>
-                {item.medicineName} {item.dosage && `· ${item.dosage}`}{" "}
-                {item.duration && `· ${item.duration}`}
+                {item.medicineName} {item.dosage && `· ${item.dosage}`}{' '}
+                {item.administrationRoute && `· ${item.administrationRoute}`} {item.duration && `· ${item.duration}`}
+                {item.note && <span className="therapy-note"> · {item.note}</span>}
               </p>
             ))}
           </div>
         )}
         <div className="report-actions">
           {!locked && !editing && (
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => setEditing(true)}
-            >
+            <button className="secondary-button" type="button" onClick={() => setEditing(true)}>
               Uredi nalaz
             </button>
           )}
           {editing && (
             <>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() => setEditing(false)}
-              >
+              <button className="secondary-button" type="button" onClick={() => setEditing(false)}>
                 Odustani
               </button>
-              <button
-                className="primary-button"
-                type="button"
-                onClick={() => void saveEdit()}
-              >
+              <button className="primary-button" type="button" onClick={() => void saveEdit()}>
                 Sačuvaj nalaz
               </button>
             </>
           )}
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() => void savePdf()}
-          >
+          <button className="secondary-button" type="button" onClick={() => void previewReport()}>
+            Pregled
+          </button>
+          <button className="secondary-button" type="button" onClick={() => void savePdf()}>
             PDF
           </button>
-          <button
-            className="primary-button"
-            type="button"
-            onClick={() => void printReport()}
-          >
+          <button className="primary-button" type="button" onClick={() => void printReport()}>
             Štampaj
           </button>
         </div>
@@ -672,5 +599,5 @@ function ExaminationDialog({
         </div>
       </section>
     </div>
-  );
+  )
 }

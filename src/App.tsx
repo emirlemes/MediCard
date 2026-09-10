@@ -32,14 +32,15 @@ function App() {
   const [settings, setSettings] = useState<ClinicSettingsRecord | null>(null)
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
   const [newExaminationPatientId, setNewExaminationPatientId] = useState<string | undefined>()
-  const [startupError, setStartupError] = useState<string | null>(null)
+  const [startupError, setStartupError] = useState<string | null>(() => window.clinic ? null : 'Aplikacija mora biti pokrenuta kroz Electron desktop aplikaciju. Ne otvarajte Vite adresu direktno u browseru.')
   const pageTitle = navigation.find((item) => item.id === page)?.label ?? 'Dashboard'
+
+  async function refreshSummary() {
+    setSummary(await window.clinic.dashboard.summary())
+  }
 
   useEffect(() => {
     if (!window.clinic) {
-      setStartupError(
-        'Aplikacija mora biti pokrenuta kroz Electron desktop aplikaciju. Ne otvarajte Vite adresu direktno u browseru.'
-      )
       return
     }
     void Promise.all([
@@ -163,12 +164,22 @@ function App() {
             (selectedPatientId ? (
               <PatientDetailPage
                 patientId={selectedPatientId}
-                settings={settings}
                 onBack={() => setSelectedPatientId(null)}
                 onNewExamination={() => startExamination(selectedPatientId)}
+                onPatientUpdated={(updated) => {
+                  setPatients((current) => current.map((patient) => (patient.id === updated.id ? updated : patient)))
+                  void refreshSummary()
+                }}
               />
             ) : (
-              <PatientsPage patients={patients} onPatientsChange={setPatients} onOpenPatient={openPatient} />
+              <PatientsPage
+                patients={patients}
+                onPatientsChange={(updated) => {
+                  setPatients(updated)
+                  void refreshSummary()
+                }}
+                onOpenPatient={openPatient}
+              />
             ))}
           {page === 'examination' && (
             <ExaminationPage
@@ -182,6 +193,7 @@ function App() {
                 setNewExaminationPatientId(undefined)
               }}
               onSaved={() => {
+                void refreshSummary()
                 setPage('patients')
                 setSelectedPatientId(newExaminationPatientId ?? null)
                 setNewExaminationPatientId(undefined)

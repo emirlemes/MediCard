@@ -20,10 +20,15 @@ export function Dashboard({
   summary: DashboardSummary;
   activeDepartmentName: string;
 }) {
+  const today = new Intl.DateTimeFormat("bs-BA", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
   return (
     <>
       <Heading
-        eyebrow="SRIJEDA, 09. SEPTEMBAR 2026."
+        eyebrow={today.toLocaleUpperCase("bs-BA")}
         title="Dobro došli u kliniku"
         subtitle="Pregled rada i najnovijih aktivnosti."
         action={

@@ -36,7 +36,7 @@ export function Patients({
       patient.phone,
       patient.address,
       patient.note,
-      patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString('bs-BA') : ''
+      patient.dateOfBirth ? formatDate(patient.dateOfBirth) : ''
     ]
       .join(' ')
       .toLowerCase()

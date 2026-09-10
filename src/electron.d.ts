@@ -19,7 +19,6 @@ declare global {
   type TherapyItemRecord = { id: string; medicineName: string; dosage: string | null; administrationRoute: string | null; duration: string | null; note: string | null }
   type ExaminationRecord = { id: string; examinationAt: string; doctorName: string; diagnosis: string | null; findings: string | null; recommendation: string | null; department: DepartmentRecord; therapy: { items: TherapyItemRecord[] } | null }
   type PatientDetail = PatientRecord & { address: string | null; nationalId: string | null; note: string | null; examinations: ExaminationRecord[] }
-  type ReportInput = { patient: { id: string; firstName: string; lastName: string; recordNumber: string; dateOfBirth: string | null; nationalId: string | null; phone: string | null; address: string | null }; examination: ExaminationRecord; settings: ClinicSettingsRecord | null }
 
   type DashboardExamination = { id: string; examinationAt: string; doctorName: string; diagnosis: string | null; patient: PatientRecord; department: DepartmentRecord }
   type DashboardSummary = {
@@ -57,8 +56,9 @@ declare global {
         exportCsv: (input: { patientName: string; recordNumber: string; examinations: ExaminationRecord[] }) => Promise<{ saved: boolean; filePath?: string }>
       }
       reports: {
-        pdf: (report: ReportInput) => Promise<{ saved: boolean; filePath?: string }>
-        print: (report: ReportInput) => Promise<{ printed: boolean; reason?: string; lockedAt?: string }>
+        preview: (examinationId: string) => Promise<{ opened: boolean }>
+        pdf: (examinationId: string) => Promise<{ saved: boolean; filePath?: string }>
+        print: (examinationId: string) => Promise<{ printed: boolean; reason?: string; lockedAt?: string }>
       }
       backup: {
         create: () => Promise<{ saved: boolean; filePath?: string }>
@@ -69,4 +69,4 @@ declare global {
   }
 }
 
-export {}
+export { }

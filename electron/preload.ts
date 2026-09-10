@@ -22,14 +22,15 @@ contextBridge.exposeInMainWorld('clinic', {
 		get: (id: string) => ipcRenderer.invoke('patients:get', id),
 		exportCsv: (patients: PatientRecord[]) => ipcRenderer.invoke('patients:export-csv', patients),
 	},
-		examinations: {
+	examinations: {
 		create: (input: { patientId: string; departmentId: string; examinationAt: string; doctorName: string; diagnosis?: string; findings?: string; recommendation?: string; therapyItems: { medicineName: string; dosage?: string; administrationRoute?: string; duration?: string; note?: string }[] }) => ipcRenderer.invoke('examinations:create', input),
 		update: (input: { id: string; diagnosis?: string; findings?: string; recommendation?: string; therapyItems?: { medicineName: string; dosage?: string; administrationRoute?: string; duration?: string; note?: string }[] }) => ipcRenderer.invoke('examinations:update', input),
 		exportCsv: (input: { patientName: string; recordNumber: string; examinations: ExaminationRecord[] }) => ipcRenderer.invoke('examinations:export-csv', input),
 	},
 	reports: {
-		pdf: (report: ReportInput) => ipcRenderer.invoke('reports:pdf', report),
-		print: (report: ReportInput) => ipcRenderer.invoke('reports:print', report),
+		preview: (examinationId: string) => ipcRenderer.invoke('reports:preview', { examinationId }),
+		pdf: (examinationId: string) => ipcRenderer.invoke('reports:pdf', { examinationId }),
+		print: (examinationId: string) => ipcRenderer.invoke('reports:print', { examinationId }),
 	},
 	backup: {
 		create: () => ipcRenderer.invoke('backup:create'),

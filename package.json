@@ -11,7 +11,7 @@
     "build": "npm run prisma:generate && tsc -b && vite build",
     "electron:build": "npm run build && electron-builder",
     "electron:build:win": "npm run build && electron-builder --win nsis portable --x64 --publish never",
-    "lint": "oxlint",
+    "lint": "oxlint --ignore-pattern 'prisma/generated/**'",
     "preview": "vite preview",
     "prisma:generate": "prisma generate",
     "rebuild:native": "npx electron-rebuild -f -w better-sqlite3",
