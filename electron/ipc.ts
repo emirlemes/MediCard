@@ -209,14 +209,14 @@ export function registerIpc(database: PrismaClient, databasePath: string) {
     if (input.therapyItems.some((item) => !item.medicineName.trim())) throw new Error('Svaki lijek mora imati naziv.')
     return database.examination.create({
       data: {
-      patientId: input.patientId,
-      departmentId: input.departmentId,
-      examinationAt,
-      doctorName,
-      diagnosis: input.diagnosis?.trim() || undefined,
-      findings: input.findings?.trim() || undefined,
-      recommendation: input.recommendation?.trim() || undefined,
-      therapy: input.therapyItems.length > 0 ? { create: { items: { create: input.therapyItems.map((item) => ({ ...item, medicineName: item.medicineName.trim() })) } } } : undefined,
+        patientId: input.patientId,
+        departmentId: input.departmentId,
+        examinationAt,
+        doctorName,
+        diagnosis: input.diagnosis?.trim() || undefined,
+        findings: input.findings?.trim() || undefined,
+        recommendation: input.recommendation?.trim() || undefined,
+        therapy: input.therapyItems.length > 0 ? { create: { items: { create: input.therapyItems.map((item) => ({ ...item, medicineName: item.medicineName.trim() })) } } } : undefined,
       },
       include: { department: true, therapy: { include: { items: true } } },
     })

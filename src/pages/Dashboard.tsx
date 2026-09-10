@@ -1,42 +1,31 @@
-import {
-  ArrowUpRight,
-  CalendarDays,
-  ClipboardList,
-  Plus,
-  Stethoscope,
-  Users,
-} from "lucide-react";
-import { Heading } from "../components/Heading";
-import { formatDate, initials } from "../utils/formatters";
+import {ArrowUpRight, CalendarDays, ClipboardList, Plus, Stethoscope, Users} from 'lucide-react'
+import {Heading} from '../components/Heading'
+import {formatDate, initials} from '../utils/formatters'
 
-type Page = "dashboard" | "patients" | "examination" | "settings";
+type Page = 'dashboard' | 'patients' | 'examination' | 'settings'
 
 export function Dashboard({
   onNavigate,
   summary,
-  activeDepartmentName,
+  activeDepartmentName
 }: {
-  onNavigate: (page: Page) => void;
-  summary: DashboardSummary;
-  activeDepartmentName: string;
+  onNavigate: (page: Page) => void
+  summary: DashboardSummary
+  activeDepartmentName: string
 }) {
-  const today = new Intl.DateTimeFormat("bs-BA", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(new Date());
+  const today = new Intl.DateTimeFormat('bs-BA', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  }).format(new Date())
   return (
     <>
       <Heading
-        eyebrow={today.toLocaleUpperCase("bs-BA")}
+        eyebrow={today.toLocaleUpperCase('bs-BA')}
         title="Dobro došli u kliniku"
         subtitle="Pregled rada i najnovijih aktivnosti."
         action={
-          <button
-            className="primary-button"
-            type="button"
-            onClick={() => onNavigate("examination")}
-          >
+          <button className="primary-button" type="button" onClick={() => onNavigate('examination')}>
             <Plus size={17} /> Novi pregled
           </button>
         }
@@ -69,20 +58,14 @@ export function Dashboard({
               <p className="eyebrow">NEDAVNO</p>
               <h2>Posljednji pacijenti</h2>
             </div>
-            <button
-              className="text-button"
-              type="button"
-              onClick={() => onNavigate("patients")}
-            >
+            <button className="text-button" type="button" onClick={() => onNavigate('patients')}>
               Svi pacijenti <ArrowUpRight size={15} />
             </button>
           </div>
           <div className="patient-list">
             {summary.recentPatients.map((patient) => (
               <div className="patient-row" key={patient.id}>
-                <div className="patient-avatar">
-                  {initials(`${patient.firstName} ${patient.lastName}`)}
-                </div>
+                <div className="patient-avatar">{initials(`${patient.firstName} ${patient.lastName}`)}</div>
                 <div>
                   <strong>
                     {patient.firstName} {patient.lastName}
@@ -101,10 +84,28 @@ export function Dashboard({
               <p className="eyebrow">PREGLEDI</p>
               <h2>Posljednji pregledi</h2>
             </div>
-            <button className="text-button" type="button" onClick={() => onNavigate("patients")}>Kartoni <ArrowUpRight size={15} /></button>
+            <button className="text-button" type="button" onClick={() => onNavigate('patients')}>
+              Kartoni <ArrowUpRight size={15} />
+            </button>
           </div>
           <div className="patient-list">
-            {summary.recentExaminations.map((examination) => <div className="patient-row" key={examination.id}><div className="patient-avatar"><ClipboardList size={16} /></div><div><strong>{examination.patient.firstName} {examination.patient.lastName}</strong><span>{examination.diagnosis || "Pregled bez dijagnoze"} · {examination.department.name} · {examination.doctorName}</span></div><time>{formatDate(examination.examinationAt)}</time></div>)}
+            {summary.recentExaminations.map((examination) => (
+              <div className="patient-row" key={examination.id}>
+                <div className="patient-avatar">
+                  <ClipboardList size={16} />
+                </div>
+                <div>
+                  <strong>
+                    {examination.patient.firstName} {examination.patient.lastName}
+                  </strong>
+                  <span>
+                    {examination.diagnosis || 'Pregled bez dijagnoze'} · {examination.department.name} ·{' '}
+                    {examination.doctorName}
+                  </span>
+                </div>
+                <time>{formatDate(examination.examinationAt)}</time>
+              </div>
+            ))}
           </div>
         </section>
         <section className="panel quick-panel">
@@ -114,18 +115,18 @@ export function Dashboard({
             icon={<Users size={18} />}
             title="Otvorite pacijente"
             detail="Pretražite kartone i historiju"
-            onClick={() => onNavigate("patients")}
+            onClick={() => onNavigate('patients')}
           />
           <QuickAction
             icon={<ClipboardList size={18} />}
             title="Unesite pregled"
             detail="Dodajte nalaz i terapiju"
-            onClick={() => onNavigate("examination")}
+            onClick={() => onNavigate('examination')}
           />
         </section>
       </div>
     </>
-  );
+  )
 }
 
 function StatCard({
@@ -133,33 +134,33 @@ function StatCard({
   value,
   change,
   icon,
-  accent = false,
+  accent = false
 }: {
-  label: string;
-  value: string;
-  change: string;
-  icon: React.ReactNode;
-  accent?: boolean;
+  label: string
+  value: string
+  change: string
+  icon: React.ReactNode
+  accent?: boolean
 }) {
   return (
-    <div className={`stat-card ${accent ? "accent" : ""}`}>
+    <div className={`stat-card ${accent ? 'accent' : ''}`}>
       <div className="stat-icon">{icon}</div>
       <p>{label}</p>
       <strong>{value}</strong>
       <span>{change}</span>
     </div>
-  );
+  )
 }
 function QuickAction({
   icon,
   title,
   detail,
-  onClick,
+  onClick
 }: {
-  icon: React.ReactNode;
-  title: string;
-  detail: string;
-  onClick: () => void;
+  icon: React.ReactNode
+  title: string
+  detail: string
+  onClick: () => void
 }) {
   return (
     <button type="button" className="quick-action" onClick={onClick}>
@@ -170,5 +171,5 @@ function QuickAction({
       </span>
       <ArrowUpRight size={16} />
     </button>
-  );
+  )
 }

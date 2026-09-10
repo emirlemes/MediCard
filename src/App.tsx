@@ -32,7 +32,11 @@ function App() {
   const [settings, setSettings] = useState<ClinicSettingsRecord | null>(null)
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
   const [newExaminationPatientId, setNewExaminationPatientId] = useState<string | undefined>()
-  const [startupError, setStartupError] = useState<string | null>(() => window.clinic ? null : 'Aplikacija mora biti pokrenuta kroz Electron desktop aplikaciju. Ne otvarajte Vite adresu direktno u browseru.')
+  const [startupError, setStartupError] = useState<string | null>(() =>
+    window.clinic
+      ? null
+      : 'Aplikacija mora biti pokrenuta kroz Electron desktop aplikaciju. Ne otvarajte Vite adresu direktno u browseru.'
+  )
   const pageTitle = navigation.find((item) => item.id === page)?.label ?? 'Dashboard'
 
   async function refreshSummary() {

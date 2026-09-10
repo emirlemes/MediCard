@@ -28,9 +28,9 @@ export function PatientDetailPage({
         }
         setPatient(loadedPatient)
       })
-        .catch(() => setLoadingError({patientId, message: 'Karton nije moguće učitati.'}))
+      .catch(() => setLoadingError({patientId, message: 'Karton nije moguće učitati.'}))
   }, [patientId])
-      if (loadingError?.patientId === patientId)
+  if (loadingError?.patientId === patientId)
     return (
       <section className="panel empty-form">
         <Users size={30} />
@@ -377,7 +377,7 @@ function ExaminationDialog({
   )
   async function savePdf() {
     try {
-      const result = await window.clinic.reports.pdf(examination.id);
+      const result = await window.clinic.reports.pdf(examination.id)
       if (result.saved) setMessage('PDF je sačuvan.')
     } catch {
       setMessage('PDF nije moguće sačuvati.')
@@ -385,14 +385,14 @@ function ExaminationDialog({
   }
   async function previewReport() {
     try {
-      await window.clinic.reports.preview(examination.id);
+      await window.clinic.reports.preview(examination.id)
     } catch {
       setMessage('Pregled nalaza nije moguće otvoriti.')
     }
   }
   async function printReport() {
     try {
-      const result = await window.clinic.reports.print(examination.id);
+      const result = await window.clinic.reports.print(examination.id)
       if (result.printed && result.lockedAt) {
         onLocked(result.lockedAt)
         setMessage('Nalaz je poslan na štampu. Karton je zaključan.')
