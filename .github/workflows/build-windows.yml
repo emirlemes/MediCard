@@ -4,11 +4,13 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "v*"
+      - 'v*'
 
 jobs:
   build-windows:
     runs-on: windows-latest
+    env:
+      DATABASE_URL: 'file:./data/clinic.db'
 
     steps:
       - name: Checkout
