@@ -1,0 +1,92 @@
+{
+  "name": "MediCard",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Desktop aplikacija za evidenciju pacijenata i pregleda Poliklinike Šabanović.",
+  "author": "Emir Lemeš <eemir.lemes@gmail.com>",
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "concurrently -k \"vite --port 5175 --strictPort\" \"wait-on http://localhost:5175 && electron .\"",
+    "build": "npm run prisma:generate && tsc -b && vite build",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:win": "npm run build && electron-builder --win nsis portable --x64",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "prisma:generate": "prisma generate",
+    "rebuild:native": "npx electron-rebuild -f -w better-sqlite3",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "better-sqlite3": "^13.0.3",
+    "lucide-react": "^1.43.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "build": {
+    "appId": "com.medicard.desktop",
+    "productName": "MediCard",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "prisma/**/*",
+      "assets/icons/**/*",
+      "node_modules/.prisma/**/*",
+      "node_modules/@prisma/client/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/icons/windows/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "artifactName": "MediCard-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "mac": {
+      "icon": "assets/icons/macos/icon.icns",
+      "artifactName": "MediCard-${version}-${arch}.${ext}",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "icon": "assets/icons/linux/icons",
+      "target": [
+        "AppImage"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "concurrently": "^10.0.5",
+    "dotenv": "^17.4.2",
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3",
+    "oxlint": "^1.79.0",
+    "prisma": "^7.10.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2",
+    "vite-plugin-electron": "^1.1.2",
+    "vite-plugin-electron-renderer": "^1.0.0",
+    "wait-on": "^9.1.0"
+  }
+}

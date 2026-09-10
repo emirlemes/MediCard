@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Department {
+  id           String        @id @default(cuid())
+  name         String
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  examinations Examination[]
+}
+
+model Patient {
+  id           String        @id @default(cuid())
+  recordNumber String        @unique
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime?
+  nationalId   String?
+  address      String?
+  phone        String?
+  note         String?
+  lockedAt     DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  examinations Examination[]
+}
+
+model Examination {
+  id             String     @id @default(cuid())
+  patientId      String
+  departmentId   String
+  examinationAt  DateTime   @default(now())
+  doctorName     String
+  diagnosis      String?
+  findings       String?
+  recommendation String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  patient        Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  department     Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  therapy        Therapy?
+
+  @@index([patientId, examinationAt])
+  @@index([departmentId, examinationAt])
+}
+
+model Therapy {
+  id            String        @id @default(cuid())
+  examinationId String        @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  examination   Examination   @relation(fields: [examinationId], references: [id], onDelete: Cascade)
+  items         TherapyItem[]
+}
+
+model TherapyItem {
+  id                  String   @id @default(cuid())
+  therapyId           String
+  medicineName        String
+  dosage              String?
+  administrationRoute String?
+  duration            String?
+  note                String?
+  createdAt           DateTime @default(now())
+  therapy             Therapy  @relation(fields: [therapyId], references: [id], onDelete: Cascade)
+
+  @@index([therapyId])
+}
+
+model ClinicSettings {
+  id           Int      @id @default(1)
+  clinicName   String   @default("")
+  address      String   @default("")
+  phone        String   @default("")
+  email        String   @default("")
+  doctorName   String   @default("")
+  departmentId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
