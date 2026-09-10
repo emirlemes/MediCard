@@ -32,5 +32,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: klinika-windows
-          path: release/*.{exe,yml}
+          path: |
+            release/*.exe
+            release/*.blockmap
           if-no-files-found: error
