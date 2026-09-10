@@ -10,7 +10,7 @@
     "dev": "concurrently -k \"vite --port 5175 --strictPort\" \"wait-on http://localhost:5175 && electron .\"",
     "build": "npm run prisma:generate && tsc -b && vite build",
     "electron:build": "npm run build && electron-builder",
-    "electron:build:win": "npm run build && electron-builder --win nsis portable --x64",
+    "electron:build:win": "npm run build && electron-builder --win nsis portable --x64 --publish never",
     "lint": "oxlint",
     "preview": "vite preview",
     "prisma:generate": "prisma generate",
